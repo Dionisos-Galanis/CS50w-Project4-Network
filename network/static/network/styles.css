@@ -1,0 +1,26 @@
+.heart {
+    width: 20px;
+    height: 20px;
+}
+
+.post-date-time {
+    float: right;
+}
+
+.post-text {
+    font-size: larger;
+}
+
+.inline {
+    display: inline;
+}
+
+#follow-switch {
+    margin: 20px;
+}
+
+#n-followers {
+    float: right;
+    margin: 20px;
+    font-size: larger;
+}
