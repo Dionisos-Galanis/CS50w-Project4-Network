@@ -12,7 +12,7 @@ from .models import Post, User, Like, Comment
 from .utils import get_posts
 
 
-def user_page(request, user_id, page=1):
+def user_page(request, user_id, num_page=1):
     try:
         list_type = "User Profile"
         page_user = User.objects.get(pk=user_id)
@@ -21,15 +21,18 @@ def user_page(request, user_id, page=1):
     if request.method == "POST":  # Switching the Follow status
         pass
     else:   # Displaying the users profile
+        paginator = get_posts(list_type, page_user)
         return render(request, "network/index.html", {
             "list_type": list_type,
             "n_followers": page_user.followers.count(),
             "page_user": page_user,
-            "posts_to_display": get_posts(list_type, page, page_user)
+            "cur_page": paginator.page(num_page),
+            "num_page": num_page,
+            "page_range": paginator.page_range
         })
 
 
-def index(request, page=1):
+def index(request, num_page=1):
     list_type = "All Posts"
     page_user = None
     if request.method == "POST":  # Adding a new post
@@ -39,22 +42,31 @@ def index(request, page=1):
                     author=request.user
                     )
             post.save()
+            paginator = get_posts(list_type)
             return render(request, "network/index.html", {
                 "add_post_form": AddPostForm(),
                 "list_type": list_type,
-                "posts_to_display": get_posts(list_type, page)
+                "cur_page": paginator.page(num_page),
+                "num_page": num_page,
+                "page_range": paginator.page_range
             })
         else:
+            paginator = get_posts(list_type)
             return render(request, "network/index.html", {
                 "add_post_form": AddPostForm(request.POST),
                 "list_type": list_type,
-                "posts_to_display": get_posts(list_type, page)
+                "cur_page": paginator.page(num_page),
+                "num_page": num_page,
+                "page_range": paginator.page_range
             })
     else:  # Displaying posts
+        paginator = get_posts(list_type)
         return render(request, "network/index.html", {
             "add_post_form": AddPostForm(),
             "list_type": list_type,
-            "posts_to_display": get_posts(list_type, page)
+            "cur_page": paginator.page(num_page),
+            "num_page": num_page,
+            "page_range": paginator.page_range
         })
 
 

@@ -15,12 +15,22 @@
     display: inline;
 }
 
+.title {
+    margin: 20px;
+}
+
+.vert-delim {
+    height: 30px;
+    width: 100%;
+}
+
 #follow-switch {
     margin: 20px;
 }
 
 #n-followers {
     float: right;
-    margin: 20px;
+    margin-top: 20px;
+    margin-right: 20px;
     font-size: larger;
 }
