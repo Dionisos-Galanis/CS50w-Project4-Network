@@ -1,23 +1,96 @@
 {% extends "network/layout.html" %}
 {% load static %}
 
+
+{% block javascript %}
+    
+    <!-- Follow switch -->
+    {% if not user == page_user %}
+        <script>
+            $("#follow-switch-form").submit(function (e) {
+                // preventing from page reload and default actions
+                e.preventDefault();
+                // serialize the data for sending the form data.
+                var serializedData = $(this).serialize();
+                // make POST ajax call
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'follow_switch' %}",
+                    data: serializedData,
+                    success: function (response) {
+                        // on success
+                        console.log('Success');
+                        const fs = $('#follow-switch');
+                        const fa = $('#follow-action');
+                        if (fa.val() == 'Follow') {
+                            fa.val('Unfollow');
+                            fs.text('Unfollow');
+                        }
+                        else {
+                            fa.val('Follow');
+                            fs.text('Follow');
+                        }
+                        const n_followers = parseInt(response["n_followers"]);
+                        const followers = n_followers==1 ? 'follower' : 'followers';
+                        $('#n-followers').text(`{{ page_user.username | title }} has ${n_followers} ${followers}`);
+                    },
+                    error: function (response) {
+                        // alert the error if any error occured
+                        console.log('Error');
+                        alert(response["responseJSON"]["error"]);
+                    }
+                })
+            })
+        </script>
+    {% endif %}
+
+{% endblock %}
+
+
 {% block body %}
 
-    <!-- Header -->
-    {% if list_type == "All Posts" %}
-        <h2 class="title">All Posts</h2>
-    {% elif list_type == "User Profile" %}
-        <h2 class="title inline">{{ page_user.username | title }} Profile</h2>
-        <!-- Follow switch -->
-        {% if not user == page_user %}
-            {% if page_user in user.follow %}
-                <button id="follow-switch" class="inline btn btn-primary" data-state="Unfollow">Unfollow</button>
-            {% else %}
-                <button id="follow-switch" class="inline btn btn-primary" data-state="Follow">Follow</button>
+    <div id="header-box">
+        <div>
+        <!-- Header -->
+        {% if list_type == "All Posts" %}
+            <h2 class="title">All Posts</h2>
+        </div>
+        {% elif list_type == "User Profile" %}
+            <h2 class="title inline">{{ page_user.username | title }} Profile</h2>
+            <!-- Follow switch -->
+            {% if not user == page_user %}
+                <form id="follow-switch-form" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="follower" value="{{ user.pk }}">
+                    <input type="hidden" name="followed" value="{{ page_user.pk }}">
+                    {% if page_user in user.follow.all %}
+                        <input id="follow-action" type="hidden" name="follow_action" value="Unfollow">
+                        <button type="submit" id="follow-switch" class="inline btn btn-primary">Unfollow</button>
+                    {% else %}
+                        <input id="follow-action" type="hidden" name="follow_action" value="Follow">
+                        <button type="submit" id="follow-switch" class="inline btn btn-primary">Follow</button>
+                    {% endif %}
+                </form>
             {% endif %}
+        </div>
+
+
+        <div id="right-float-div">
+            <!-- Number of followers -->
+            {% if n_followers == 1 %}
+                <div id="n-followers">{{ page_user.username | title }} has 1 follower</div>
+            {% else %}
+                <div id="n-followers">{{ page_user.username | title }} has {{ n_followers }} followers</div>
+            {% endif %}
+            <!-- Number of follows -->
+            {% if n_follows == 1 %}
+                <div id="n-follows">{{ page_user.username | title }} follows 1 user</div>
+            {% else %}
+                <div id="n-follows">{{ page_user.username | title }} follows {{ n_follows }} users</div>
+            {% endif %}
+        </div>
         {% endif %}
-        <div id="n-followers">{{ page_user.username | title }} has {{ n_followers }} followers</div>
-    {% endif %}
+    </div>
 
     <!-- Empty div -->
     <div class="vert-delim"></div>

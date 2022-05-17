@@ -12,6 +12,26 @@ from .models import Post, User, Like, Comment
 from .utils import get_posts
 
 
+def follow_switch(request):
+    if request.method == "POST": # It always should be POST
+        data = request.POST
+        try:
+            follower = User.objects.get(pk=int(data['follower']))
+            followed = User.objects.get(pk=int(data['followed']))
+        except:
+            return JsonResponse({"error": f"Follower={int(data['follower'])} or Followed={int(data['followed'])} not found!"}, status=400)
+        if data["follow_action"] == "Follow":
+            follower.follow.add(followed)
+        elif data["follow_action"] == "Unfollow":
+            follower.follow.remove(followed)
+        else:   #Something is wrong
+            return JsonResponse({"error": "Wrong action!"}, status=400)
+        n_followers = followed.followers.count()
+        return JsonResponse({"result": "OK", "n_followers": n_followers}, status=200)
+    else:   # Something is wrong
+        return JsonResponse({"error": "Error!"}, status=400)
+
+
 def user_page(request, user_id, num_page=1):
     try:
         list_type = "User Profile"
@@ -25,6 +45,7 @@ def user_page(request, user_id, num_page=1):
         return render(request, "network/index.html", {
             "list_type": list_type,
             "n_followers": page_user.followers.count(),
+            "n_follows": page_user.follow.count(),
             "page_user": page_user,
             "cur_page": paginator.page(num_page),
             "num_page": num_page,
@@ -34,7 +55,6 @@ def user_page(request, user_id, num_page=1):
 
 def index(request, num_page=1):
     list_type = "All Posts"
-    page_user = None
     if request.method == "POST":  # Adding a new post
         add_post_form = AddPostForm(request.POST)
         if add_post_form.is_valid():

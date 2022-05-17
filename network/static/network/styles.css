@@ -12,25 +12,39 @@
 }
 
 .inline {
-    display: inline;
+    display: inline-block;
 }
 
-.title {
+#header-box {
     margin: 20px;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .vert-delim {
     height: 30px;
     width: 100%;
+    clear: both;
 }
 
 #follow-switch {
     margin: 20px;
 }
 
-#n-followers {
+div #right-float-div {
     float: right;
     margin-top: 20px;
     margin-right: 20px;
     font-size: larger;
+}
+
+/* #n-followers {
+ 
+} */
+
+#n-follows {
+    margin-top: 20px;
 }
