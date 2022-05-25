@@ -4,204 +4,282 @@
 
 {% block javascript %}
     
-    <!-- Follow switch -->
-    {% if not user == page_user %}
-        <script>
-            $("#follow-switch-form").submit(function (e) {
-                // preventing from page reload and default actions
-                e.preventDefault();
-                // serialize the data for sending the form data.
-                var serializedData = $(this).serialize();
-                // make POST ajax call
-                $.ajax({
-                    type: 'POST',
-                    url: "{% url 'follow_switch' %}",
-                    data: serializedData,
-                    success: function (response) {
-                        // on success
-                        console.log('Success');
-                        const fs = $('#follow-switch');
-                        const fa = $('#follow-action');
-                        if (fa.val() == 'Follow') {
-                            fa.val('Unfollow');
-                            fs.text('Unfollow');
-                        }
-                        else {
-                            fa.val('Follow');
-                            fs.text('Follow');
-                        }
-                        const n_followers = parseInt(response["n_followers"]);
-                        const followers = n_followers==1 ? 'follower' : 'followers';
-                        $('#n-followers').text(`{{ page_user.username | title }} has ${n_followers} ${followers}`);
-                    },
-                    error: function (response) {
-                        // alert the error if any error occured
-                        console.log('Error');
-                        alert(response["responseJSON"]["error"]);
+    <script>
+
+        // Follow switch
+        {% if not user == page_user %}
+
+        $("#follow-switch-form").submit(function (e) {
+            // preventing from page reload and default actions
+            e.preventDefault();
+            // serialize the data for sending the form data.
+            var serializedData = $(this).serialize();
+            // make POST ajax call
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'follow_switch' %}",
+                data: serializedData,
+                success: function (response) {
+                    // on success
+                    console.log('Success');
+                    const fs = $('#follow-switch');
+                    const fa = $('#follow-action');
+                    if (fa.val() == 'Follow') {
+                        fa.val('Unfollow');
+                        fs.text('Unfollow');
                     }
-                })
+                    else {
+                        fa.val('Follow');
+                        fs.text('Follow');
+                    }
+                    const n_followers = parseInt(response["n_followers"]);
+                    const followers = n_followers==1 ? 'follower' : 'followers';
+                    $('#n-followers').text(`{{ page_user.username | title }} has ${n_followers} ${followers}`);
+                },
+                error: function (response) {
+                    // alert the error if any error occured
+                    console.log('Error');
+                    alert(response["responseJSON"]["error"]);
+                }
             })
-        </script>
-    {% endif %}
+        })
+    
+        {% endif %}
+
+
+        // Like switch
+        {% if user.is_authenticated %}
+
+        $(".like-switch-form").submit(function (e) {
+            // preventing from page reload and default actions
+            e.preventDefault();
+            // serialize the data for sending the form data.
+            const serializedData = $(this).serialize();
+            const lf = $(this);
+            // make POST ajax call
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'like_switch' %}",
+                data: serializedData,
+                success: function (response) {
+                    // on success
+                    console.log('Success');
+                    const ls = lf.children('.like-switch');
+                    const la = lf.children('.like-action');
+                    const nl = lf.closest('span').next('.likes-number');
+                    const nli = parseInt(nl.html());
+                    if (la.val() == 'Like') {
+                        la.val('Unlike');
+                        ls.attr("src", "{% static 'network/filledheart.png' %}");
+                        nl.html((nli + 1).toString() + ' likes');
+                    }
+                    else {
+                        la.val('Like');
+                        ls.attr("src", "{% static 'network/emptyheart.png' %}");
+                        nl.html((nli - 1).toString() + ' likes');
+                    }
+                    const n_likes = parseInt(response["n_likes"]);
+                    const likes = n_likes==1 ? 'like' : 'likes';
+                    $(this).next('span.likes-number').text(`${n_likes} ${likes}`);
+                },
+                error: function (response) {
+                    // alert the error if any error occured
+                    console.log('Error');
+                    alert(response["responseJSON"]["error"]);
+                }
+            })
+        })
+    
+        {% endif %}
+
+    </script>
 
 {% endblock %}
 
 
 {% block body %}
 
-    <div id="header-box">
-        <div>
-        <!-- Header -->
-        {% if list_type == "All Posts" %}
-            <h2 class="title">All Posts</h2>
-        </div>
-        {% elif list_type == "User Profile" %}
-            <h2 class="title inline">{{ page_user.username | title }} Profile</h2>
-            <!-- Follow switch -->
-            {% if not user == page_user %}
-                <form id="follow-switch-form" class="inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="follower" value="{{ user.pk }}">
-                    <input type="hidden" name="followed" value="{{ page_user.pk }}">
-                    {% if page_user in user.follow.all %}
-                        <input id="follow-action" type="hidden" name="follow_action" value="Unfollow">
-                        <button type="submit" id="follow-switch" class="inline btn btn-primary">Unfollow</button>
-                    {% else %}
-                        <input id="follow-action" type="hidden" name="follow_action" value="Follow">
-                        <button type="submit" id="follow-switch" class="inline btn btn-primary">Follow</button>
-                    {% endif %}
-                </form>
-            {% endif %}
-        </div>
+<div id="header-box">
+    <div>
+    <!-- Header -->
+    {% if list_type == "All Posts" %}
+        <h2 class="title">All Posts</h2>
+    </div>
+    {% elif list_type == "User Profile" %}
+        <h2 class="title inline">{{ page_user.username | title }} Profile</h2>
 
+        <!-- Follow switch -->
+        {% if not user == page_user %}
 
-        <div id="right-float-div">
-            <!-- Number of followers -->
-            {% if n_followers == 1 %}
-                <div id="n-followers">{{ page_user.username | title }} has 1 follower</div>
+        <form id="follow-switch-form" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="follower" value="{{ user.pk }}">
+            <input type="hidden" name="followed" value="{{ page_user.pk }}">
+
+            {% if page_user in user.follow.all %}
+
+            <input id="follow-action" type="hidden" name="follow_action" value="Unfollow">
+            <button type="submit" id="follow-switch" class="inline btn btn-primary">Unfollow</button>
+
             {% else %}
-                <div id="n-followers">{{ page_user.username | title }} has {{ n_followers }} followers</div>
+
+            <input id="follow-action" type="hidden" name="follow_action" value="Follow">
+            <button type="submit" id="follow-switch" class="inline btn btn-primary">Follow</button>
+
             {% endif %}
-            <!-- Number of follows -->
-            {% if n_follows == 1 %}
-                <div id="n-follows">{{ page_user.username | title }} follows 1 user</div>
-            {% else %}
-                <div id="n-follows">{{ page_user.username | title }} follows {{ n_follows }} users</div>
-            {% endif %}
-        </div>
+
+        </form>
+
         {% endif %}
+
     </div>
 
-    <!-- Empty div -->
-    <div class="vert-delim"></div>
 
-    <!-- New post form -->
-    {% if user.is_authenticated and list_type == "All Posts" %}
+    <div id="right-float-div">
 
-        <div class="card">
-            <div class="card-header">
-                <h3>New post</h3>
-            </div>
-            <div class="card-body">
-                <form action="{% url 'index' %}" method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        {{ add_post_form.text }}
-                    </div>
-                    <input class="btn btn-primary" type="submit" value="Post" name="Post">
-                </form>
-            </div>
-        </div>
+        <!-- Number of followers -->
+        {% if n_followers == 1 %}
+        <div id="n-followers">{{ page_user.username | title }} has 1 follower</div>
+        {% else %}
+        <div id="n-followers">{{ page_user.username | title }} has {{ n_followers }} followers</div>
+        {% endif %}
 
+        <!-- Number of follows -->
+        {% if n_follows == 1 %}
+        <div id="n-follows">{{ page_user.username | title }} follows 1 user</div>
+        {% else %}
+        <div id="n-follows">{{ page_user.username | title }} follows {{ n_follows }} users</div>
+        {% endif %}
+    </div>
     {% endif %}
+</div>
 
-    <!-- Posts list (current page) -->
-    {% for post in cur_page.object_list %}
+<!-- Empty div -->
+<div class="vert-delim"></div>
 
-        <div class="post-div card">
+<!-- New post form -->
+{% if user.is_authenticated and list_type == "All Posts" %}
 
-            <div class="post-author card-header">
-                <a href="{% url 'user_page' post.author.pk 1 %}"><h3>{{ post.author.username }}</h3></a>
-            </div>
+<div class="card">
+    <div class="card-header">
+        <h3>New post</h3>
+    </div>
+    <div class="card-body">
+        <form action="{% url 'index' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">{{ add_post_form.text }}</div>
+            <input class="btn btn-primary" type="submit" value="Post" name="Post">
+        </form>
+    </div>
+</div>
 
-            <div class="card-body">
+{% endif %}
 
-                <div class="post-text card-text">
-                    <p>{{ post.text }}</p>
-                </div>
+<!-- Posts list (current page) -->
+{% for post in cur_page.object_list %}
 
-                <div class="post-date-time">
-                    <p>Posted: {{ post.date_time }}</p>
-                </div>
+<!-- Single post div -->
+<div class="post-div card">
 
-                <div class="post-likes">
-                    <span> 
-                        {% if user.is_authenticated %}
-                            <a href=""> <!--  url 'like_switch' post.pk  -->
-                                {% if true %}
-                                    <img class="heart" src="{% static 'network/filledheart.png' %}">
-                                {% else %}
-                                    <img class="heart" src="{% static 'network/emptyheart.png' %}">
-                                {% endif %}
-                            </a> 
-                        {% else %}
-                            <img class="heart" src="{% static 'network/filledheart.png' %}">
-                        {% endif %}
-                    </span>
-                    <span class="likes-number">{{ post.n_likes }} likes</span>
-                </div>
+    <!-- Author (header) -->
+    <div class="post-author card-header">
+        <a href="{% url 'user_page' post.author.pk 1 %}"><h3>{{ post.author.username }}</h3></a>
+    </div>
 
-            </div>
+    <div class="card-body">
 
-            <div class="comments card-footer"></div>
-
+        <!-- Post text -->
+        <div class="post-text card-text">
+            <p>{{ post.text }}</p>
         </div>
 
-    {% empty %}
+        <!-- Date-time -->
+        <div class="post-date-time">
+            <p>Posted: {{ post.date_time }}</p>
+        </div>
 
-        <h5>No posts here ...</h5>
+        <!-- Likes -->
+        <div class="post-likes">
 
-    {% endfor %}
+            <!-- Like switch -->
+            <span> 
+                {% if user.is_authenticated %}
+                <form class="like-switch-form" method="POST">
+                {% csrf_token %}
+                    <input type="hidden" name="post_id" value="{{ post.pk }}">
 
-    <!-- Paginator -->
-    <nav aria-label="pagianator">
-        <ul class="pagination">
-            <!-- Previous -->
-            {% if cur_page.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ num_page |add:-1 }}">Previous</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <a class="page-link" href="{{ num_page |add:-1 }}" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-            {% endif %}
+                    {% load my_filters %}
 
-            <!-- Pages cicle -->
-            {% for num in page_range %}
-                {% if num == num_page %}
-                    <!-- Current page -->
-                    <li class="page-item active" aria-current="page">
-                        <p class="page-link">{{ num }} <span class="sr-only">(current)</span></p>
-                    </li>
+                    {% if post|is_like_post:user %}
+                    <input class="like-action" type="hidden" name="like_action" value="Unlike">
+                    <input class="like-switch" type="image" name="like_switch"
+                        src="{% static 'network/filledheart.png' %}" border="none" alt="Like">
+                    {% else %}
+                    <input class="like-action" type="hidden" name="like_action" value="Like">
+                    <input class="like-switch" type="image" name="like_switch"
+                        src="{% static 'network/emptyheart.png' %}" border="none" alt="Like">
+                    {% endif %}
+                </form>
                 {% else %}
-                    <!-- Other pages -->
-                    <li class="page-item"><a class="page-link" href="{{ num }}">{{ num }}</a></li>
+                <img class="like-switch" src="{% static 'network/filledheart.png' %}">
                 {% endif %}
-            {% endfor %}
+            </span>
 
-            <!-- Next -->
-            {% if cur_page.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ num_page|add:1 }}">Next</a>
+            <!-- Number of likes -->
+            <span class="likes-number">{{ post.n_likes }} likes</span>
+        </div>
+
+    </div>
+
+    <div class="comments card-footer"></div>
+
+</div>
+
+{% empty %}
+
+<h5>No posts here ...</h5>
+
+{% endfor %}
+
+<!-- Paginator -->
+<nav aria-label="pagianator">
+    <ul class="pagination">
+        <!-- Previous -->
+        {% if cur_page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="{{ num_page |add:-1 }}">Previous</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="{{ num_page |add:-1 }}" tabindex="-1" aria-disabled="true">Previous</a>
+            </li>
+        {% endif %}
+
+        <!-- Pages cicle -->
+        {% for num in page_range %}
+            {% if num == num_page %}
+                <!-- Current page -->
+                <li class="page-item active" aria-current="page">
+                    <p class="page-link">{{ num }} <span class="sr-only">(current)</span></p>
                 </li>
             {% else %}
-                <li class="page-item disabled">
-                    <a class="page-link" href="{{ num_page|add:1 }}" tabindex="-1" aria-disabled="true">Next</a>
-                </li>
+                <!-- Other pages -->
+                <li class="page-item"><a class="page-link" href="{{ num }}">{{ num }}</a></li>
             {% endif %}
+        {% endfor %}
 
-        </ul>
-    </nav>
+        <!-- Next -->
+        {% if cur_page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ num_page|add:1 }}">Next</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="{{ num_page|add:1 }}" tabindex="-1" aria-disabled="true">Next</a>
+            </li>
+        {% endif %}
+
+    </ul>
+</nav>
 
 {% endblock %}

@@ -12,6 +12,41 @@ from .models import Post, User, Like, Comment
 from .utils import get_posts
 
 
+def like_switch(request):
+    if request.method == "POST": # It always should be POST
+        data = request.POST
+        liker = request.user
+        try:
+            cur_post = Post.objects.get(pk=int(data['post_id']))
+        except:
+            return JsonResponse({"error": f"Post not found!"}, status=400)
+        
+        if data["like_action"] == "Like":
+            try:
+                Like.objects.get(post=cur_post, user=liker)
+                return JsonResponse({"error": f"Like already exists!"}, status=400)
+            except:
+                Like.objects.create(post=cur_post, user=liker)
+                cur_post.n_likes += 1
+                cur_post.save()
+
+        elif data["like_action"] == "Unlike":
+            try:
+                Like.objects.filter(post=cur_post, user=liker).delete()
+                cur_post.n_likes -= 1
+                cur_post.save()
+            except:
+                return JsonResponse({"error": f"Like not found!"}, status=400)
+
+        else:   #Something is wrong
+            return JsonResponse({"error": "Wrong action!"}, status=400)
+
+        n_likes = cur_post.post_likes.count()
+        return JsonResponse({"result": "OK", "n_likes": n_likes}, status=200)
+    else:   # Something is wrong
+        return JsonResponse({"error": "Error!"}, status=400)
+
+
 def follow_switch(request):
     if request.method == "POST": # It always should be POST
         data = request.POST
