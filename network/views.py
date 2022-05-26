@@ -67,25 +67,37 @@ def follow_switch(request):
         return JsonResponse({"error": "Error!"}, status=400)
 
 
+def followed(request, num_page=1):
+    list_type = "Followed"
+    followed = request.user.follow.all()
+    # Displaying the users profile
+    paginator = get_posts(list_type, followed)
+    return render(request, "network/index.html", {
+        "list_type": list_type,
+        "followed": followed,
+        "cur_page": paginator.page(num_page),
+        "num_page": num_page,
+        "page_range": paginator.page_range
+    })
+
+
 def user_page(request, user_id, num_page=1):
     try:
         list_type = "User Profile"
         page_user = User.objects.get(pk=user_id)
     except:
         return render(request, "network/not_found.html")
-    if request.method == "POST":  # Switching the Follow status
-        pass
-    else:   # Displaying the users profile
-        paginator = get_posts(list_type, page_user)
-        return render(request, "network/index.html", {
-            "list_type": list_type,
-            "n_followers": page_user.followers.count(),
-            "n_follows": page_user.follow.count(),
-            "page_user": page_user,
-            "cur_page": paginator.page(num_page),
-            "num_page": num_page,
-            "page_range": paginator.page_range
-        })
+    # Displaying the users profile
+    paginator = get_posts(list_type, page_user)
+    return render(request, "network/index.html", {
+        "list_type": list_type,
+        "n_followers": page_user.followers.count(),
+        "n_follows": page_user.follow.count(),
+        "page_user": page_user,
+        "cur_page": paginator.page(num_page),
+        "num_page": num_page,
+        "page_range": paginator.page_range
+    })
 
 
 def index(request, num_page=1):

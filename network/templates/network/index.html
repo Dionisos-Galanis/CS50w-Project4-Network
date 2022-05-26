@@ -151,6 +151,12 @@
         <div id="n-follows">{{ page_user.username | title }} follows {{ n_follows }} users</div>
         {% endif %}
     </div>
+    
+    {% elif list_type == "Followed" %}
+
+        <h2 class="title">Following</h2>
+    </div>
+    
     {% endif %}
 </div>
 
@@ -195,7 +201,11 @@
 
         <!-- Date-time -->
         <div class="post-date-time">
+            {% load tz %}
+            {% get_current_timezone as TIME_ZONE %}
+            {% timezone "Europe/Paris" %}
             <p>Posted: {{ post.date_time }}</p>
+            {% endtimezone %}
         </div>
 
         <!-- Likes -->
