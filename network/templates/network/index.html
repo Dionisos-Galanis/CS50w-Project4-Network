@@ -156,6 +156,7 @@
         <h2 class="title inline">{{ page_user.username | title }} Profile</h2>
 
         <!-- Follow switch -->
+        {%  if user.is_authenticated  %}
         {% if not user == page_user %}
 
         <form id="follow-switch-form" class="inline">
@@ -177,6 +178,7 @@
 
         </form>
 
+        {% endif %}
         {% endif %}
 
     </div>
