@@ -1,6 +1,19 @@
+.edit-div {
+    margin-bottom: 10px;
+}
+
+.like-switch-form {
+    display: inline-block;
+}
+
 .like-switch {
     width: 20px;
     height: 20px;
+    vertical-align: bottom;
+}
+
+.likes-number {
+    vertical-align: middle;
 }
 
 .post-date-time {
@@ -9,6 +22,10 @@
 
 .post-text {
     font-size: larger;
+}
+
+.p-text {
+    width: 100%;
 }
 
 .inline {

@@ -63,7 +63,6 @@
                 data: serializedData,
                 success: function (response) {
                     // on success
-                    console.log('Success');
                     const ls = lf.children('.like-switch');
                     const la = lf.children('.like-action');
                     const nl = lf.closest('span').next('.likes-number');
@@ -84,13 +83,61 @@
                 },
                 error: function (response) {
                     // alert the error if any error occured
-                    console.log('Error');
                     alert(response["responseJSON"]["error"]);
                 }
             })
         })
     
         {% endif %}
+
+
+        // Edit post
+
+        // Edit button
+        $("button.edit-btn").on("click", function(event) {
+
+            event.preventDefault();
+
+            $(this).parent().siblings("div.post-text").children(".p-text").replaceWith(
+                "<textarea class='p-text' name='post_text'>"
+                + $(this).parent().siblings("div.post-text").children(".p-text").text()
+                + "</textarea>");
+
+            $(this).siblings("input.save-btn").css("display", "inline-block");
+
+            $(this).css("display", "none");
+
+        })
+
+        // Save button (AJAX)
+        $(".edit-form").submit(function (e) {
+            // preventing from page reload and default actions
+            e.preventDefault();
+
+            // serialize the data for sending the form data.
+            const serializedData = $(this).serialize();
+            const ef = $(this);
+            
+            // make POST ajax call
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'save_post' %}",
+                data: serializedData,
+                success: function (response) {
+                    // on success
+                    const pt = ef.find('.p-text');
+                    pt.replaceWith("<p class='p-text'>" + pt.val() + "</p>");
+                    const sav = ef.find('.save-btn');
+                    const edt = ef.find('.edit-btn');
+                    sav.css("display", "none");
+                    edt.css("display", "inline-block");
+                },
+                error: function (response) {
+                    // alert the error if any error occured
+                    alert(response["responseJSON"]["error"]);
+                }
+            })
+        })
 
     </script>
 
@@ -194,18 +241,29 @@
 
     <div class="card-body">
 
-        <!-- Post text -->
-        <div class="post-text card-text">
-            <p>{{ post.text }}</p>
-        </div>
+        <form class="edit-form" method="post"> <!--  EDIT FORM  -->
+            {% csrf_token %}
+
+            <!--  Hidden fields  -->
+            <input type="hidden" name="post_id" value="{{ post.pk }}">
+        
+            <!-- Post text -->
+            <div class="post-text card-text">
+                <p class="p-text">{{ post.text }}</p>
+            </div>
+            
+            <!-- Buttons -->
+            {% if user == post.author %}
+            <div class = "edit-div">
+                <button class="edit-btn btn btn-primary">Edit</button>
+                <input class="save-btn btn btn-primary" style="display: none;" type="submit" value="Save" name="Save">
+            </div>
+            {% endif %}
+        </form>
 
         <!-- Date-time -->
         <div class="post-date-time">
-            {% load tz %}
-            {% get_current_timezone as TIME_ZONE %}
-            {% timezone "Europe/Paris" %}
-            <p>Posted: {{ post.date_time }}</p>
-            {% endtimezone %}
+            <p>Posted: <span class="datetime">{{ post.date_time.isoformat }}</span></p>
         </div>
 
         <!-- Likes -->
@@ -236,7 +294,11 @@
             </span>
 
             <!-- Number of likes -->
+            {%  if post.n_likes == 1  %}
+            <span class="likes-number">{{ post.n_likes }} like</span>
+            {%  else  %}
             <span class="likes-number">{{ post.n_likes }} likes</span>
+            {%  endif  %}
         </div>
 
     </div>

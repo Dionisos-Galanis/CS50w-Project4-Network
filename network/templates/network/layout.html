@@ -55,5 +55,17 @@
 
         {% block javascript %}
         {% endblock %}
+
+        <script> // Localize time
+        document.addEventListener("DOMContentLoaded", function(event) {
+            dtFields = document.querySelectorAll('span.datetime');
+            for (let i = 0; i < dtFields.length; i++) {
+                let str = dtFields[i].innerHTML;
+                str = str.substring(0, str.length - 9) + 'Z';
+                let dt = new Date(str);
+                dtFields[i].innerHTML = dt.toLocaleString();
+            }
+        });        
+        </script>
     </body>
 </html>

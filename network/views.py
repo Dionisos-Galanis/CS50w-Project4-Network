@@ -12,6 +12,27 @@ from .models import Post, User, Like, Comment
 from .utils import get_posts
 
 
+def save_post(request):
+    if request.method == "POST": # It always should be POST
+        data = request.POST
+        editor = request.user
+        try:
+            cur_post = Post.objects.get(pk=int(data['post_id']))
+            new_text = data['post_text']
+        except:
+            return JsonResponse({"error": f"Post not found!"}, status=400)
+
+        if not cur_post.author == editor: # Check that only post author can edit it
+            return JsonResponse({"error": f"Access denied!"}, status=401)
+
+        cur_post.text =  new_text
+        cur_post.save()
+
+        return JsonResponse({"result": "OK"}, status=200)
+    else:   # Something is wrong
+        return JsonResponse({"error": "Error!"}, status=400)
+
+
 def like_switch(request):
     if request.method == "POST": # It always should be POST
         data = request.POST
@@ -101,6 +122,9 @@ def user_page(request, user_id, num_page=1):
 
 
 def index(request, num_page=1):
+    tz = request.session.get('django_timezone')
+    from django.utils import timezone
+    local_time = timezone.localtime(timezone.now())
     list_type = "All Posts"
     if request.method == "POST":  # Adding a new post
         add_post_form = AddPostForm(request.POST)
@@ -133,7 +157,7 @@ def index(request, num_page=1):
             "list_type": list_type,
             "cur_page": paginator.page(num_page),
             "num_page": num_page,
-            "page_range": paginator.page_range
+            "page_range": paginator.page_range,
         })
 
 
